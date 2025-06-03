@@ -5,6 +5,10 @@ import FilterPanel from '../FilterPanel/FilterPanel';
 import Pagination from '../Pagination/Pagination';
 import CharacterDetail from '../CharacterDetail/CharacterDetail';
 import { Character } from '../../types/character';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 
 const columns = [
   { key: 'id', label: 'ID' },
@@ -54,6 +58,10 @@ const CharacterTable: React.FC = () => {
     });
   }, [characters, sort]);
 
+  const handleCloseDetail = () => {
+    dispatch(setSelectedCharacter(null));
+  };
+
   if (loading) return <div>Yükleniyor...</div>;
   if (error) return <div>Hata: {error}</div>;
 
@@ -101,7 +109,21 @@ const CharacterTable: React.FC = () => {
         </tbody>
       </table>
       <Pagination page={page} totalPages={totalPages} onPageChange={(p) => dispatch(setPage(p))} />
-      <CharacterDetail character={selectedCharacter} />
+      <Dialog open={!!selectedCharacter} onClose={handleCloseDetail} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Karakter Detayı
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseDetail}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <div style={{ padding: 16 }}>
+          <CharacterDetail character={selectedCharacter} />
+        </div>
+      </Dialog>
     </div>
   );
 };

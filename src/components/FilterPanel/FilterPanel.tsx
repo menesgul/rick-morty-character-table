@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setFilters } from '../../features/characters/characterSlice';
 
-const statusOptions = ['', 'Alive', 'Dead', 'unknown'];
-const genderOptions = ['', 'Female', 'Male', 'Genderless', 'unknown'];
+const statusOptions = ['', 'Alive', 'Dead', 'Unknown'];
+const genderOptions = ['', 'Female', 'Male', 'Genderless', 'Unknown'];
 
 const FilterPanel: React.FC = () => {
   const dispatch = useAppDispatch();
