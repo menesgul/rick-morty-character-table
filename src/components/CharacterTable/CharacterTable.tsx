@@ -40,6 +40,8 @@ const TableRow = React.memo(({ char, onSelect }: { char: Character; onSelect: (c
             width: isHovered ? '90px' : '50px',
             height: isHovered ? '90px' : '50px',
             transition: 'width 0.3s ease-in-out, height 0.3s ease-in-out', // Yumuşak geçiş için
+            borderRadius: '14px',
+           
           }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}

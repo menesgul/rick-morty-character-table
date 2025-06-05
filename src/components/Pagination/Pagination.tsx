@@ -29,15 +29,47 @@ const Pagination: React.FC<PaginationProps> = ({ page, totalPages, onPageChange 
 
   // Render pagination controls with flex layout
   return (
-    <div style={{ display: 'flex', gap: 8, margin: '16px 0', alignItems: 'center' }}>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      gap: '16px', 
+      margin: '24px 0',
+      width: '100%'
+    }}>
       {/* Previous page button - disabled when on first page */}
-      <button onClick={handlePrev} disabled={page === 1}>Previous</button>
+      <button 
+        onClick={handlePrev} 
+        disabled={page === 1}
+        style={{
+          minWidth: '100px',
+          opacity: page === 1 ? 0.5 : 1
+        }}
+      >
+        Previous
+      </button>
       
       {/* Current page indicator showing page numbers */}
-      <span>Page {page} / {totalPages}</span>
+      <span style={{ 
+        fontSize: '1.1rem',
+        fontWeight: 'bold',
+        minWidth: '120px',
+        textAlign: 'center'
+      }}>
+        Page {page} / {totalPages}
+      </span>
       
       {/* Next page button - disabled when on last page */}
-      <button onClick={handleNext} disabled={page === totalPages}>Next</button>
+      <button 
+        onClick={handleNext} 
+        disabled={page === totalPages}
+        style={{
+          minWidth: '100px',
+          opacity: page === totalPages ? 0.5 : 1
+        }}
+      >
+        Next
+      </button>
     </div>
   );
 };
