@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCharacters, setSelectedCharacter, setPage, setSort } from '../../features/characters/characterSlice';
 import FilterPanel from '../FilterPanel/FilterPanel';
@@ -6,121 +6,176 @@ import Pagination from '../Pagination/Pagination';
 import CharacterDetail from '../CharacterDetail/CharacterDetail';
 import { Character } from '../../types/character';
 import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 
+// Define table columns with their labels and sort indicators
 const columns = [
-  { key: 'id', label: 'ID' },
-  { key: 'name', label: 'İsim' },
-  { key: 'status', label: 'Durum' },
-  { key: 'species', label: 'Tür' },
-  { key: 'gender', label: 'Cinsiyet' },
-  { key: 'location', label: 'Lokasyon' },
+  { key: 'id', label: 'ID ⬍' },
+  { key: 'name', label: 'Name ⬍' },
+  { key: 'status', label: 'Status ⬍' },
+  { key: 'species', label: 'Species ⬍' },
+  { key: 'gender', label: 'Gender ⬍' },
+  { key: 'location', label: 'Location ⬍' },
 ];
 
-const CharacterTable: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { characters, loading, error, filters, page, totalPages, selectedCharacter, sort } = useAppSelector((state) => state.characters);
+// Memoized table row component for better performance
+// Handles individual character row display with hover effects on image
+const TableRow = React.memo(({ char, onSelect }: { char: Character; onSelect: (char: Character) => void }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
 
+  return (
+    <tr onClick={() => onSelect(char)} style={{ cursor: 'pointer' }}>
+      <td>{char.id}</td>
+      <td>{char.name}</td>
+      <td>{char.status === 'unknown' ? 'Unknown' : char.status}</td>
+      <td>{char.species === 'unknown' ? 'Unknown' : char.species}</td>
+      <td>{char.gender === 'unknown' ? 'Unknown' : char.gender}</td>
+      <td>{char.location.name}</td>
+      <td>
+        <img
+          src={char.image}
+          alt={char.name}
+          style={{
+            width: isHovered ? '90px' : '50px',
+            height: isHovered ? '90px' : '50px',
+            transition: 'width 0.3s ease-in-out, height 0.3s ease-in-out', // Yumuşak geçiş için
+          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          loading="lazy"
+        />
+      </td>
+    </tr>
+  );
+});
+
+// Main CharacterTable component
+const CharacterTable: React.FC = () => {
+  // Get state and dispatch from Redux store
+  const dispatch = useAppDispatch();
+  const { characters, loading, filters, page, totalPages, selectedCharacter, sort } = useAppSelector((state) => state.characters);
+
+  // Fetch characters when page or filters change
   useEffect(() => {
     dispatch(fetchCharacters());
   }, [dispatch, filters, page]);
 
-  const handleSort = (field: string) => {
+  // Handle column sorting logic
+  const handleSort = useCallback((field: string) => {
     const typedField = field as keyof Character | '';
     if (sort.field === typedField) {
       dispatch(setSort({ field: typedField, direction: sort.direction === 'asc' ? 'desc' : 'asc' }));
     } else {
       dispatch(setSort({ field: typedField, direction: 'asc' }));
     }
-  };
+  }, [dispatch, sort]);
 
-  // Sıralama sadece client-side (API sıralama desteği yok)
-  const sortedCharacters = React.useMemo(() => {
-    if (!sort.field) return characters;
-    return [...characters].sort((a, b) => {
-      let aValue = a[sort.field as keyof typeof a];
-      let bValue = b[sort.field as keyof typeof b];
-      if (sort.field === 'location') {
-        aValue = (a.location as any).name;
-        bValue = (b.location as any).name;
-      }
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sort.direction === 'asc'
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sort.direction === 'asc' ? aValue - bValue : bValue - aValue;
-      }
-      return 0;
-    });
+  // Client-side sorting implementation
+  // Sorts characters based on selected field and direction
+  const sortedCharacters = useMemo(() => {
+    let list = [...characters];
+    if (sort.field) {
+      list.sort((a, b) => {
+        let aValue = a[sort.field as keyof typeof a];
+        let bValue = b[sort.field as keyof typeof b];
+        if (sort.field === 'location') {
+          aValue = a.location.name;
+          bValue = b.location.name;
+        }
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sort.direction === 'asc'
+            ? aValue.localeCompare(bValue, 'tr')
+            : bValue.localeCompare(aValue, 'tr');
+        }
+        return 0;
+      });
+    }
+    return list;
   }, [characters, sort]);
 
-  const handleCloseDetail = () => {
+  // Close character detail dialog
+  const handleCloseDetail = useCallback(() => {
     dispatch(setSelectedCharacter(null));
-  };
+  }, [dispatch]);
 
-  if (loading) return <div>Yükleniyor...</div>;
-  if (error) return <div>Hata: {error}</div>;
+  // Handle pagination
+  const handlePageChange = useCallback((newPage: number) => {
+    dispatch(setPage(newPage));
+  }, [dispatch]);
 
   return (
-    <div>
-      <h2>Karakter Tablosu</h2>
+    <div className="character-table-container">
+      {/* Filter panel for character filtering */}
       <FilterPanel />
-      <Pagination page={page} totalPages={totalPages} onPageChange={(p) => dispatch(setPage(p))} />
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                style={{ cursor: 'pointer' }}
-                onClick={() => handleSort(col.key)}
-              >
-                {col.label}
-                {sort.field === col.key && (sort.direction === 'asc' ? ' ▲' : ' ▼')}
-              </th>
-            ))}
-            <th>Görsel</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedCharacters.length === 0 ? (
+      {/* Top pagination controls */}
+      <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+
+      {/* Main table container with responsive design */}
+      <div className="table-responsive" style={{ display: 'flex', justifyContent: 'center' }}>
+        <table>
+          {/* Table header with sortable columns */}
+          <thead>
             <tr>
-              <td colSpan={8} style={{ textAlign: 'center', padding: 24 }}>
-                Filtreye uygun veri bulunamadı.
-              </td>
+              {columns.map((col) => (
+                <th
+                onClick={() => handleSort(col.key)}
+                className={`sortable-header ${sort.field === col.key ? 'active' : ''}`}
+                title="Click to sort"
+                >
+                  {col.label}
+                  {(sort.field === col.key || col.key === 'id') && (
+                     <span className="sort-indicator">
+                     {sort.field === col.key ? (sort.direction === 'asc' ? '▲' : '▼') : ''}
+                   </span>
+                  )}
+                </th>
+              ))}
+              <th>Icon</th>
             </tr>
-          ) : (
-            sortedCharacters.map((char) => (
-              <tr key={char.id} onClick={() => dispatch(setSelectedCharacter(char))} style={{ cursor: 'pointer' }}>
-                <td>{char.id}</td>
-                <td>{char.name}</td>
-                <td>{char.status}</td>
-                <td>{char.species}</td>
-                <td>{char.gender}</td>
-                <td>{char.location.name}</td>
-                <td><img src={char.image} alt={char.name} width={40} height={40} /></td>
+          </thead>
+          <tbody>
+            {/* Loading state display */}
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="no-data">
+                  Yükleniyor...
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-      <Pagination page={page} totalPages={totalPages} onPageChange={(p) => dispatch(setPage(p))} />
+            ) : sortedCharacters.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="no-data">
+                  Filtreye uygun veri bulunamadı.
+                </td>
+              </tr>
+            ) : (
+              sortedCharacters.map((char) => (
+                <TableRow
+                  key={char.id}
+                  char={char}
+                  onSelect={(char) => dispatch(setSelectedCharacter(char))}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Bottom pagination controls */}
+      <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
+
+      {/* Character detail dialog */}
       <Dialog open={!!selectedCharacter} onClose={handleCloseDetail} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Karakter Detayı
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseDetail}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <div style={{ padding: 16 }}>
+        <IconButton
+          aria-label="close"
+          onClick={handleCloseDetail}
+          sx={{ position: 'absolute', right: 8, top: 8, zIndex: 1 }}
+        >
+          <CloseIcon />
+        </IconButton>
+        <div className="dialog-content"
+          style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}
+        >
           <CharacterDetail character={selectedCharacter} />
         </div>
       </Dialog>
@@ -128,4 +183,5 @@ const CharacterTable: React.FC = () => {
   );
 };
 
-export default CharacterTable; 
+// Memoize the entire component for performance optimization
+export default React.memo(CharacterTable);
