@@ -1,4 +1,5 @@
 # Rick and Morty Karakter Tablosu - Yazılım Gereksinimleri Spesifikasyonu (SRS)
+(Bu Software Requirements Specification AI ile yazılmıştır.)
 
 ## 1. Proje Genel Bakış
 ### 1.1 Amaç
@@ -106,12 +107,7 @@ Rick and Morty API'sini kullanarak, kullanıcı dostu, filtreleme ve sıralama �
 ## 9. API Gereksinimleri
 
 ### 9.1 Kullanılacak API
-- [Rick and Morty API](https://rickandmortyapi.com/)
-- REST endpoint: `https://rickandmortyapi.com/api/character`
-- API, karakter verilerini sayfalı olarak döner (varsayılan: 20 karakter/sayfa, toplam: 826 karakter)
-- Filtreleme parametreleri: `name`, `status`, `species`, `type`, `gender`
-- Sayfalama parametresi: `page`
-- Detay için: `/character/{id}` endpointi kullanılacak
+[kısıtlı]
 
 ### 9.2 API Yanıt Şeması
 - Karakter listesi: `results` (array), `info` (sayfalama bilgisi)
