@@ -56,7 +56,7 @@ const TableRow = React.memo(({ char, onSelect }: { char: Character; onSelect: (c
 const CharacterTable: React.FC = () => {
   // Get state and dispatch from Redux store
   const dispatch = useAppDispatch();
-  const { characters, loading, filters, page, totalPages, selectedCharacter, sort } = useAppSelector((state) => state.characters);
+  const { characters, loading, error, filters, page, totalPages, selectedCharacter, sort } = useAppSelector((state) => state.characters);
 
   // Fetch characters when page or filters change
   useEffect(() => {
@@ -144,6 +144,12 @@ const CharacterTable: React.FC = () => {
                   Yükleniyor...
                 </td>
               </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={7} className="no-data error">
+                  {error}
+                </td>
+              </tr>
             ) : sortedCharacters.length === 0 ? (
               <tr>
                 <td colSpan={7} className="no-data">
@@ -167,7 +173,13 @@ const CharacterTable: React.FC = () => {
       <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
 
       {/* Character detail dialog */}
-      <Dialog open={!!selectedCharacter} onClose={handleCloseDetail} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={!!selectedCharacter} 
+        onClose={handleCloseDetail} 
+        maxWidth="sm" 
+        fullWidth
+        data-testid="character-detail-dialog"
+      >
         <IconButton
           aria-label="close"
           onClick={handleCloseDetail}

@@ -45,17 +45,21 @@ const Pagination: React.FC<PaginationProps> = ({ page, totalPages, onPageChange 
           minWidth: '100px',
           opacity: page === 1 ? 0.5 : 1
         }}
+        data-testid="pagination-prev-button"
       >
         Previous
       </button>
       
       {/* Current page indicator showing page numbers */}
-      <span style={{ 
-        fontSize: '1.1rem',
-        fontWeight: 'bold',
-        minWidth: '120px',
-        textAlign: 'center'
-      }}>
+      <span 
+        style={{ 
+          fontSize: '1.1rem',
+          fontWeight: 'bold',
+          minWidth: '120px',
+          textAlign: 'center'
+        }}
+        data-testid="pagination-page-info"
+      >
         Page {page} / {totalPages}
       </span>
       
@@ -67,6 +71,7 @@ const Pagination: React.FC<PaginationProps> = ({ page, totalPages, onPageChange 
           minWidth: '100px',
           opacity: page === totalPages ? 0.5 : 1
         }}
+        data-testid="pagination-next-button"
       >
         Next
       </button>
